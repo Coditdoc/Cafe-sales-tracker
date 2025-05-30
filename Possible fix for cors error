@@ -1,34 +1,141 @@
-// NEW: Handle CORS preflight requests
-function doOptions() {
-  return ContentService.createTextOutput('')
-    .setMimeType(ContentService.MimeType.TEXT)
-    .setHeaders({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    });
-}
-
 function doPost(e) {
   try {
-    // ... existing code ...
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Sales");
+    
+    // Read the form parameters sent from your HTML
+    const item = e.parameter.item;
+    const quantity = e.parameter.quantity;
+    const dateTime = new Date();
 
+    // Append new row with the data
+    sheet.appendRow([item, quantity, dateTime]);
+
+    // Return success response as JSON
     return ContentService
       .createTextOutput(JSON.stringify({ result: 'success' }))
-      .setMimeType(ContentService.MimeType.JSON)
-      // ADD CORS HEADER TO POST RESPONSE
-      .setHeaders({ 'Access-Control-Allow-Origin': '*' });
-
+      .setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
-    // ... existing code ...
+    // Return error details as JSON
     return ContentService
-      .createTextOutput(JSON.stringify({ result: 'error', message: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON)
-      // ADD CORS HEADER TO ERROR RESPONSE
-      .setHeaders({ 'Access-Control-Allow-Origin': '*' });
+      .createTextOutput(JSON.stringify({ result: 'error', message: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 
-//for testing
-curl -X POST -H "Content-Type: application/json" -d '{"item":"Test","quantity":1}' YOUR_SCRIPT_URL
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cafe Sales Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .form-container {
+      background: white;
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    table {
+      width: 100%;
+      margin-top: 30px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f8f8f8;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cafe Sales Tracker</h1>
+  <div class="form-container">
+    <label for="item">Item Sold:</label>
+    <input type="text" id="item" placeholder="Enter item name" />
+
+    <label for="quantity">Quantity:</label>
+    <input type="number" id="quantity" min="1" placeholder="Enter quantity" />
+
+    <button onclick="addSale()">Add Sale</button>
+  </div>
+
+  <table id="salesTable">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Quantity</th>
+        <th>Date & Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Sales records will appear here -->
+    </tbody>
+  </table>
+
+  <script>
+    async function addSale() {
+      const item = document.getElementById('item').value.trim();
+      const quantity = document.getElementById('quantity').value.trim();
+      const now = new Date().toLocaleString();
+
+      if (!item || !quantity || isNaN(quantity) || quantity <= 0) {
+        alert('Please enter a valid item and quantity.');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('item', item);
+      formData.append('quantity', quantity);
+
+      try {
+        const response = await fetch('https://script.google.com/macros/s/AKfycbzEeR_Fz2nZLYRhG7xf22ouiPwH4PxmjV1-u3cwBzDfdVYGzwa5Tx9R_M-86KZY2MisHQ/exec', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.result === 'success') {
+          const table = document.getElementById('salesTable').getElementsByTagName('tbody')[0];
+          const newRow = table.insertRow();
+          newRow.insertCell(0).textContent = item;
+          newRow.insertCell(1).textContent = quantity;
+          newRow.insertCell(2).textContent = now;
+
+          document.getElementById('item').value = '';
+          document.getElementById('quantity').value = '';
+        } else {
+          alert('Error: ' + result.message);
+        }
+      } catch (error) {
+        alert('Failed to send data: ' + error.message);
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
