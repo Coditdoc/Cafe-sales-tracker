@@ -1,0 +1,30 @@
+// NEW: Handle CORS preflight requests
+function doOptions() {
+  return ContentService.createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT)
+    .setHeaders({
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    });
+}
+
+function doPost(e) {
+  try {
+    // ... existing code ...
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ result: 'success' }))
+      .setMimeType(ContentService.MimeType.JSON)
+      // ADD CORS HEADER TO POST RESPONSE
+      .setHeaders({ 'Access-Control-Allow-Origin': '*' });
+
+  } catch (error) {
+    // ... existing code ...
+    return ContentService
+      .createTextOutput(JSON.stringify({ result: 'error', message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON)
+      // ADD CORS HEADER TO ERROR RESPONSE
+      .setHeaders({ 'Access-Control-Allow-Origin': '*' });
+  }
+}
