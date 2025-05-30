@@ -1,0 +1,25 @@
+function doPost(e) {
+  try {
+    Logger.log("Raw event: " + JSON.stringify(e));
+
+    if (!e || !e.postData || !e.postData.contents) {
+      throw new Error("Invalid request payload");
+    }
+
+    const data = JSON.parse(e.postData.contents);
+    Logger.log("Parsed data: " + JSON.stringify(data));
+
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    sheet.appendRow([data.item, data.quantity, new Date()]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ result: 'success' }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    Logger.log('Error: ' + error);
+    return ContentService
+      .createTextOutput(JSON.stringify({ result: 'error', message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
