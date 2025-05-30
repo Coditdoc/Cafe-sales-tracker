@@ -28,3 +28,7 @@ function doPost(e) {
       .setHeaders({ 'Access-Control-Allow-Origin': '*' });
   }
 }
+
+
+//for testing
+curl -X POST -H "Content-Type: application/json" -d '{"item":"Test","quantity":1}' YOUR_SCRIPT_URL
