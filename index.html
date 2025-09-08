@@ -1,4 +1,4 @@
-<!doctype html>
+<!-- <!doctype html>
 <html lang="en">
 
 <head>
@@ -318,7 +318,7 @@
 
   <div class="container">
     <div class="grid">
-      <!-- Left column: menu & controls -->
+      
       <div class="card">
         <div class="menu-head">
           <div style="flex:1">
@@ -351,7 +351,7 @@
         </div>
       </div>
 
-      <!-- Right column: orders -->
+      
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <div>
@@ -373,7 +373,7 @@
     </div>
   </div>
 
-  <!-- sticky checkout bottom -->
+  
   <div class="checkout">
     <div class="container">
       <div class="card checkout-inner" style="display:flex;align-items:center;">
@@ -833,4 +833,510 @@
 
 </body>
 
+</html> -->
+
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Cafe POS — Mobile Friendly</title>
+  <style>
+    /* (styles unchanged) */
+    :root{ --bg:#0f1720; --card:#122433; --accent:#66c0f4; --muted:#cfe9ff; --danger:#ff5a5f; --ok:#3ddc84; }
+    *{box-sizing:border-box}
+    body{ margin:0; font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:var(--bg); color:#fff; -webkit-font-smoothing:antialiased;}
+    header{ padding:14px 14px 6px; display:flex; align-items:center; gap:12px; }
+    header h1{ font-size:18px; margin:0; font-weight:700; }
+    .container{ padding:12px; max-width:1100px; margin:0 auto; }
+    .grid{ display:grid; gap:10px; grid-template-columns:1fr; }
+    @media(min-width:900px){ .grid{ grid-template-columns:420px 1fr; } }
+    .card{ background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; padding:10px; box-shadow:0 6px 18px rgba(0,0,0,.35); }
+    .menu-head{ display:flex; gap:8px; align-items:center; }
+    .search{ flex:1; display:flex; gap:8px; }
+    .search input{ width:100%; padding:10px 12px; border-radius:10px; border:none; font-size:15px; background:rgba(255,255,255,0.02); color:#fff; }
+    .cat-row{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+    .cat{ padding:6px 8px; border-radius:999px; font-size:13px; background:rgba(255,255,255,0.03); cursor:pointer; border:1px solid rgba(255,255,255,0.03); }
+    .cat.active{ background:var(--accent); color:#072033; font-weight:700; border:none; }
+    .menu-list{ display:grid; grid-template-columns: repeat(auto-fill,minmax(140px,1fr)); gap:8px; margin-top:10px; }
+    .menu-item{ padding:10px; border-radius:10px; background:transparent; border:1px solid rgba(255,255,255,0.03); font-size:14px; text-align:center; user-select:none; cursor:pointer; display:flex; flex-direction:column; gap:6px; }
+    .menu-item .name{ font-weight:600; } .menu-item .price{ font-size:13px; color:var(--muted); }
+    .qty-row{ display:flex; gap:8px; margin-top:8px; align-items:center; }
+    .qty-row button{ padding:8px 10px; border-radius:8px; border:none; background:rgba(255,255,255,0.03); color:#fff; }
+    .customers{ display:flex; gap:8px; overflow:auto; padding:6px 0; margin-top:8px; }
+    .cust-pill{ padding:8px 10px; border-radius:999px; background:rgba(255,255,255,0.02); cursor:pointer; font-size:13px; border:1px solid rgba(255,255,255,0.02); }
+    .cust-pill.active{ background:#fff; color:#072033; box-shadow:0 6px 18px rgba(0,0,0,.2); }
+    .orders{ max-height:60vh; overflow:auto; padding-right:6px; }
+    .order-card{ padding:10px; border-radius:8px; display:flex; gap:8px; align-items:flex-start; justify-content:space-between; border:1px solid rgba(255,255,255,0.03); margin-bottom:8px; }
+    .order-meta{ font-size:12px; color:var(--muted); } .items{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+    .item-row{ display:flex; justify-content:space-between; gap:8px; padding:8px; border-radius:8px; background:rgba(0,0,0,0.12); font-size:14px; cursor:pointer; user-select:none; }
+    .item-row.paid{ text-decoration:line-through; opacity:.6; background:transparent; }
+    .checkout{ position:sticky; bottom:0; background:linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.6)); padding-top:8px; }
+    .checkout-inner{ display:flex; gap:10px; align-items:center; justify-content:space-between; padding:10px; border-radius:10px; }
+    .badge-due{ background:var(--danger); padding:6px 10px; border-radius:8px; font-weight:700; color:#fff; }
+    .btn{ padding:10px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
+    .btn.primary{ background:var(--accent); color:#072033; } .btn.ghost{ background:rgba(255,255,255,0.03); color:#fff; } .btn.small{ padding:8px 10px; font-size:13px; }
+    .muted{ color:var(--muted); font-size:13px; }
+    @media(max-width:420px){ .menu-list{ grid-template-columns: repeat(2,1fr); } }
+    @media(min-width:900px){ .menu-list{ grid-template-columns: repeat(3,1fr); } }
+  </style>
+</head>
+<body>
+  <header><h1>☕ Cafe POS — Mobile</h1></header>
+
+  <div class="container">
+    <div class="grid">
+      <!-- Left column: menu & controls -->
+      <div class="card">
+        <div class="menu-head">
+          <div style="flex:1">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <div class="search"><input id="searchBox" placeholder="Search items or category" /></div>
+              <button class="btn ghost small" onclick="clearSearch()">Clear</button>
+            </div>
+            <div class="cat-row" id="categoryRow"></div>
+          </div>
+        </div>
+
+        <div class="menu-list" id="menuList"></div>
+
+        <div style="margin-top:8px" class="muted">Tap an item to add it to the active customer. Use quantity selector below.</div>
+
+        <div class="qty-row">
+          <button onclick="adjustQty(-1)">−</button>
+          <input id="qtyInput" type="number" value="1" min="1" style="width:60px;padding:8px;border-radius:8px;border:none;text-align:center;background:rgba(255,255,255,0.02);color:#fff" />
+          <button onclick="adjustQty(1)">+</button>
+
+          <div style="flex:1"></div>
+          <button class="btn primary small" onclick="createCustomerPrompt()">+ New Customer</button>
+        </div>
+
+        <div style="margin-top:8px">
+          <div class="muted">Active customers</div>
+          <div class="customers" id="customersRow"></div>
+        </div>
+      </div>
+
+      <!-- Right column: orders -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <strong>Orders</strong>
+            <div class="muted" id="ordersHint">Tap any item to toggle paid/unpaid</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn ghost small" onclick="openVisualizer()">Reports</button>
+            <button class="btn ghost small" onclick="uploadPending(true)">Upload Now</button>
+            <button class="btn ghost small" onclick="downloadSalesCSV()">Download CSV</button>
+            <button class="btn ghost small" onclick="downloadSalesXLSX()">Download Excel</button>
+          </div>
+        </div>
+
+        <div class="orders" id="ordersContainer" style="margin-top:8px;"></div>
+
+        <div style="margin-top:8px" class="muted" id="pendingSummary"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- sticky checkout bottom -->
+  <div class="checkout">
+    <div class="container">
+      <div class="card checkout-inner" style="display:flex;align-items:center;">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div style="min-width:160px">
+            <div class="muted">Active</div>
+            <div id="activeCustomerLabel" style="font-weight:800">—</div>
+            <div class="muted" id="activeCustomerId" style="font-size:12px"></div>
+          </div>
+
+          <div class="totals">
+            <div class="muted">Due</div>
+            <div id="dueBadge" class="badge-due">₹0</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn ghost small" onclick="markAllToggle()">Mark All</button>
+          <button class="btn primary" onclick="quickAdd()">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /***********************
+     * MENU from provided images
+     ***********************/
+    const MENU = [
+      { name: "Tea", price: 10, category: "Beverages" },
+      { name: "Masala tea", price: 15, category: "Beverages" },
+      { name: "Kulhad Chai", price: 20, category: "Beverages" },
+      { name: "Lemon tea", price: 20, category: "Beverages" },
+      { name: "Coffee", price: 20, category: "Beverages" },
+      { name: "Kulhad Coffee", price: 30, category: "Beverages" },
+      { name: "Cold Coffee", price: 60, category: "Beverages" },
+      { name: "Cold Coffee with ice-cream", price: 80, category: "Beverages" },
+
+      { name: "Plain maggi", price: 40, category: "Snacks" },
+      { name: "Veg maggi", price: 60, category: "Snacks" },
+      { name: "Veg Cheese maggi", price: 80, category: "Snacks" },
+      { name: "Veg grilled sandwich", price: 80, category: "Snacks" },
+      { name: "Panner sandwich", price: 120, category: "Snacks" },
+      { name: "Cheese sandwich", price: 80, category: "Snacks" },
+      { name: "Red sauce pasta", price: 80, category: "Snacks" },
+      { name: "White sauce pasta", price: 120, category: "Snacks" },
+      { name: "Margherita pizza", price: 80, category: "Snacks" },
+      { name: "Veg delight pizza", price: 110, category: "Snacks" },
+      { name: "Panner pizza", price: 130, category: "Snacks" },
+      { name: "Sweet corn Pizza", price: 80, category: "Snacks" },
+
+      { name: "Burger", price: 50, category: "Snacks" },
+      { name: "French Fries", price: 60, category: "Snacks" },
+      { name: "Maska bun", price: 30, category: "Snacks" },
+
+      { name: "Burger + French Fries + Cold Coffee", price: 170, category: "Combos" },
+      { name: "Burger + Cold Coffee", price: 100, category: "Combos" },
+      { name: "Veg grilled sandwich + Cold Coffee", price: 120, category: "Combos" },
+      { name: "Margherita pizza + Cold Coffee", price: 120, category: "Combos" },
+      { name: "Red sauce pasta + Cold Coffee", price: 120, category: "Combos" },
+      { name: "Kulhad chai + Maska bun", price: 40, category: "Combos" },
+
+      { name: "Extra cheese", price: 20, category: "Extras" }
+    ];
+
+    /***********************
+     * Storage keys + helpers
+     ***********************/
+    const KEY_ORDERS = 'cafe_orders_v1';
+    const KEY_PENDING = 'cafe_pending_batches_v1';
+    const KEY_LAST_UPLOAD = 'cafe_last_upload_date_v1';
+
+    function readJSON(k, fallback) { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : fallback; } catch (e) { return fallback; } }
+    function writeJSON(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
+    let customers = readJSON(KEY_ORDERS, []);
+    let pendingBatches = readJSON(KEY_PENDING, []);
+    let activeCustomerId = customers.length ? customers[0].id : null;
+
+    /***********************
+     * UI elements
+     ***********************/
+    const menuListEl = document.getElementById('menuList');
+    const categoryRow = document.getElementById('categoryRow');
+    const searchBox = document.getElementById('searchBox');
+    const qtyInput = document.getElementById('qtyInput');
+    const customersRow = document.getElementById('customersRow');
+    const ordersContainer = document.getElementById('ordersContainer');
+    const activeCustomerLabel = document.getElementById('activeCustomerLabel');
+    const activeCustomerIdLabel = document.getElementById('activeCustomerId');
+    const dueBadge = document.getElementById('dueBadge');
+    const pendingSummary = document.getElementById('pendingSummary');
+
+    /***********************
+     * init categories
+     ***********************/
+    const categories = Array.from(new Set(MENU.map(m => m.category || 'General')));
+    let activeCategory = null;
+
+    function renderCategories(){
+      categoryRow.innerHTML = '';
+      const allBtn = document.createElement('div'); allBtn.className='cat' + (activeCategory===null?' active':''); allBtn.textContent='All';
+      allBtn.onclick = ()=>{ activeCategory = null; renderCategories(); renderMenu(); };
+      categoryRow.appendChild(allBtn);
+      categories.forEach(cat=>{
+        const el = document.createElement('div');
+        el.className = 'cat' + (activeCategory===cat ? ' active':'');
+        el.textContent = cat;
+        el.onclick = ()=>{ activeCategory = cat; renderCategories(); renderMenu(); };
+        categoryRow.appendChild(el);
+      });
+    }
+
+    /***********************
+     * render menu (compact)
+     ***********************/
+    function renderMenu(){
+      const q = (searchBox.value || '').trim().toLowerCase();
+      menuListEl.innerHTML = '';
+      const filtered = MENU.filter(it=>{
+        if(activeCategory && it.category !== activeCategory) return false;
+        if(!q) return true;
+        return (it.name + ' ' + (it.category||'')).toLowerCase().includes(q);
+      });
+      filtered.forEach(it=>{
+        const div = document.createElement('div');
+        div.className = 'menu-item';
+        div.innerHTML = `<div class="name">${it.name}</div><div class="price">₹${it.price}</div>`;
+        div.onclick = () => { addItemToActive(it); };
+        menuListEl.appendChild(div);
+      });
+      if(filtered.length === 0){
+        const n = document.createElement('div');
+        n.className = 'muted';
+        n.style.padding='10px';
+        n.textContent = 'No items found';
+        menuListEl.appendChild(n);
+      }
+    }
+
+    searchBox.addEventListener('input', ()=> renderMenu());
+    function clearSearch(){ searchBox.value=''; renderMenu(); }
+
+    /***********************
+     * customers
+     ***********************/
+    function genId(){ const now = Date.now(); return 'C-'+now+'-'+Math.floor(Math.random()*900+100); }
+    function createCustomer(name){
+      const id = genId();
+      const c = { id, name: name || id, createdAt: new Date().toISOString(), items: [], uploaded:false };
+      customers.unshift(c);
+      activeCustomerId = id;
+      persistAndRender();
+      return c;
+    }
+    function createCustomerPrompt(){ const name = prompt('Customer name (leave blank for Guest)') || null; createCustomer(name); }
+    function renderCustomers(){
+      customersRow.innerHTML = '';
+      customers.forEach(c=>{
+        const pill = document.createElement('div');
+        pill.className = 'cust-pill' + (c.id === activeCustomerId ? ' active' : '');
+        pill.textContent = c.name + (unpaidTotalForCustomer(c) > 0 ? ' • ₹'+unpaidTotalForCustomer(c) : '');
+        pill.onclick = ()=>{ activeCustomerId = c.id; persistAndRender(); };
+        customersRow.appendChild(pill);
+      });
+      if(customers.length === 0){
+        const btn = document.createElement('div');
+        btn.className = 'cust-pill';
+        btn.textContent = 'Create Guest';
+        btn.onclick = ()=> createCustomer('Guest');
+        customersRow.appendChild(btn);
+      }
+    }
+
+    function unpaidTotalForCustomer(c){
+      let t=0; c.items.forEach(it=>{ if(!it.paid) t += Number(it.price) * Number(it.qty); }); return t;
+    }
+
+    /***********************
+     * add item
+     ***********************/
+    function addItemToActive(menuItem){
+      const qty = Math.max(1, Number(qtyInput.value || 1));
+      if(!activeCustomerId){
+        const maybe = prompt('No active customer. Enter name for new customer or leave blank:');
+        const c = createCustomer(maybe || 'Guest');
+        activeCustomerId = c.id;
+      }
+      const cust = customers.find(c=>c.id === activeCustomerId);
+      if(!cust){ alert('Active customer missing'); return; }
+      const it = {
+        id: 'I-'+Date.now()+'-'+Math.floor(Math.random()*900+100),
+        name: menuItem.name,
+        price: Number(menuItem.price),
+        qty: qty,
+        datetime: new Date().toISOString(),
+        paid: false
+      };
+      cust.items.push(it);
+      cust.uploaded = false;
+      persistAndRender();
+    }
+
+    function quickAdd(){ const defaultItem = MENU[0]; addItemToActive(defaultItem); }
+
+    /***********************
+     * render orders (compact)
+     ***********************/
+    function renderOrders(){
+      ordersContainer.innerHTML = '';
+      if(!activeCustomerId && customers.length) activeCustomerId = customers[0].id;
+      customers.forEach(c => {
+        const card = document.createElement('div'); card.className='order-card';
+        const left = document.createElement('div'); left.style.flex='1';
+        left.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
+          <div><strong>${c.name}</strong><div class="order-meta">ID:${c.id} • ${new Date(c.createdAt).toLocaleTimeString()}</div></div>
+          <div style="text-align:right">
+            <div class="muted">Total</div>
+            <div><strong>₹${c.items.reduce((s,it)=>s + Number(it.price)*Number(it.qty),0)}</strong></div>
+            <div style="margin-top:6px">${ unpaidTotalForCustomer(c) > 0 ? `<span class="badge-due">Due ₹${unpaidTotalForCustomer(c)}</span>` : `<span class="muted">Paid</span>` }</div>
+          </div>
+        </div>`;
+
+        const itemsWrap = document.createElement('div'); itemsWrap.className='items';
+        c.items.forEach(it=>{
+          const r = document.createElement('div');
+          r.className = 'item-row' + (it.paid ? ' paid' : '');
+          r.onclick = (e)=>{ it.paid = !it.paid; it.paidAt = it.paid ? new Date().toISOString(): null; persistAndRender(); e.stopPropagation(); };
+          r.innerHTML = `<div style="display:flex;gap:8px;align-items:center;"><div style="font-weight:700">${it.name}${it.qty>1?` x${it.qty}`:''}</div><div class="muted" style="font-size:12px">${new Date(it.datetime).toLocaleTimeString()}</div></div><div style="min-width:60px;text-align:right">₹${Number(it.price)*Number(it.qty)}</div>`;
+          itemsWrap.appendChild(r);
+        });
+
+        left.appendChild(itemsWrap);
+
+        const right = document.createElement('div');
+        right.style.display='flex'; right.style.flexDirection='column'; right.style.gap='8px';
+        const btn1 = document.createElement('button');
+        btn1.className = 'btn small ghost';
+        btn1.textContent = unpaidTotalForCustomer(c) > 0 ? 'Mark All Paid' : 'Mark All Unpaid';
+        btn1.onclick = (e)=>{ if(unpaidTotalForCustomer(c) > 0){ c.items.forEach(i=>{ if(!i.paid){ i.paid=true; i.paidAt=new Date().toISOString(); } }); } else { c.items.forEach(i=>{ i.paid=false; i.paidAt=null; }); } persistAndRender(); e.stopPropagation(); };
+        const btn2 = document.createElement('button');
+        btn2.className = 'btn small';
+        btn2.textContent = 'Delete';
+        btn2.style.background = 'rgba(255,0,0,0.12)';
+        btn2.onclick = (e)=>{ if(confirm('Delete customer and items?')){ customers = customers.filter(x=>x.id !== c.id); if(activeCustomerId === c.id) activeCustomerId = customers.length ? customers[0].id : null; persistAndRender(); } e.stopPropagation(); };
+        right.appendChild(btn1); right.appendChild(btn2);
+
+        card.appendChild(left); card.appendChild(right);
+        ordersContainer.appendChild(card);
+      });
+
+      const ac = customers.find(c=>c.id === activeCustomerId);
+      if(ac){
+        activeCustomerLabel.textContent = ac.name;
+        activeCustomerIdLabel.textContent = ac.id;
+        dueBadge.textContent = '₹' + unpaidTotalForCustomer(ac);
+      } else {
+        activeCustomerLabel.textContent = '—';
+        activeCustomerIdLabel.textContent = '';
+        dueBadge.textContent = '₹0';
+      }
+      pendingSummary.textContent = `${pendingBatches.length} pending upload batch(es)`;
+    }
+
+    /***********************
+     * Upload config and functions
+     ***********************/
+    // Use the Cloudflare Worker URL here (replace with yours if different)
+    const UPLOAD_ENDPOINT = 'https://cafesales.avihs.workers.dev';
+    // Must match EXPECTED_KEY inside the worker (change to your secret)
+    const UPLOAD_API_KEY = 'k7T4K2Jd2w';
+
+    function persistAndRender(){
+      writeJSON(KEY_ORDERS, customers);
+      renderCustomers();
+      renderOrders();
+      writeJSON(KEY_PENDING, pendingBatches);
+    }
+
+    function buildUploadBatch(){
+      const toUpload = customers.filter(c=>c.items.length>0 && !c.uploaded);
+      if(toUpload.length === 0) return null;
+      const entries = [];
+      toUpload.forEach(c=> c.items.forEach(it => entries.push({
+        customerId:c.id, customerName:c.name, itemId:it.id, itemName:it.name, qty:it.qty, price:it.price, paid:!!it.paid, datetime:it.datetime
+      })));
+      return { createdAt:new Date().toISOString(), entries, customers: toUpload.map(c=>({id:c.id,name:c.name})) };
+    }
+
+    async function uploadPending(manual=false){
+      const batch = buildUploadBatch();
+      if(!batch){ if(manual) alert('No new records to upload'); return; }
+      pendingBatches.push(batch);
+      writeJSON(KEY_PENDING, pendingBatches);
+      renderOrders();
+
+      while(pendingBatches.length){
+        const next = pendingBatches[0];
+        try {
+          const res = await fetch(UPLOAD_ENDPOINT, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-cafe-key': UPLOAD_API_KEY
+            },
+            body: JSON.stringify({ action: 'batch_upload', data: next })
+          });
+
+          const text = await res.text();
+          let j;
+          try { j = text ? JSON.parse(text) : {}; } catch(e){ j = { result: 'error', message: 'Invalid JSON from server', raw: text }; }
+
+          if(j && j.result === 'success'){
+            const affectedIds = (next.customers || []).map(x=>x.id);
+            customers.forEach(c=>{ if(affectedIds.includes(c.id)){ c.uploaded = true; }});
+            pendingBatches.shift();
+            writeJSON(KEY_PENDING, pendingBatches);
+            writeJSON(KEY_ORDERS, customers);
+            localStorage.setItem(KEY_LAST_UPLOAD, new Date().toISOString());
+            if(manual) alert('Upload successful.');
+          } else {
+            console.error('Upload rejected', j);
+            if(manual) alert('Upload failed: ' + (j.message || 'server rejected'));
+            break;
+          }
+        } catch(err){
+          console.error('Upload error', err);
+          if(manual) alert('Upload failed: ' + err.message);
+          break;
+        }
+      } // end while
+      renderOrders();
+    }
+
+    /***********************
+     * misc controls
+     ***********************/
+    function adjustQty(delta){ qtyInput.value = Math.max(1, Number(qtyInput.value || 1) + delta); }
+    function openVisualizer(){ window.location.href = 'salesvisual.html'; }
+    function markAllToggle(){ const ac = customers.find(c=>c.id === activeCustomerId); if(!ac) return; if(unpaidTotalForCustomer(ac) > 0){ ac.items.forEach(i=>{ if(!i.paid){ i.paid = true; i.paidAt = new Date().toISOString(); } }); } else { ac.items.forEach(i=>{ i.paid = false; i.paidAt = null; }); } persistAndRender(); }
+
+    /***********************
+     * Startup
+     ***********************/
+    function tryAutoUploadOnLoad(){ const last = localStorage.getItem(KEY_LAST_UPLOAD); if(!last) return; const lastD = new Date(last); const now = new Date(); if(lastD.toDateString() !== now.toDateString()){ /* not uploaded today yet */ } }
+
+    (function init(){
+      if(customers.length === 0){ const c = createCustomer('Guest'); activeCustomerId = c.id; }
+      renderCategories();
+      renderMenu();
+      renderCustomers();
+      renderOrders();
+      tryAutoUploadOnLoad();
+      document.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') quickAdd(); });
+    })();
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.0/dist/xlsx.full.min.js"></script>
+  <script>
+    function buildSalesRows(){
+      let customersLocal;
+      try { customersLocal = typeof window.customers !== 'undefined' ? window.customers : JSON.parse(localStorage.getItem('cafe_orders_v1') || '[]'); }
+      catch(e){ customersLocal = []; }
+      const header = ['customerId','customerName','itemId','itemName','qty','price','paid','datetime','uploaded'];
+      const rows = [header];
+      customersLocal.forEach(cust=>{
+        const uploaded = !!cust.uploaded;
+        (cust.items || []).forEach(it=>{
+          rows.push([ cust.id||'', cust.name||'', it.id||'', it.name||'', Number(it.qty||1), Number(it.price||0), it.paid ? 'TRUE' : 'FALSE', it.datetime||'', uploaded ? 'TRUE' : 'FALSE' ]);
+        });
+      });
+      return rows;
+    }
+
+    function downloadSalesCSV(filename = null) {
+      const rows = buildSalesRows();
+      if(rows.length <= 1){ alert('No sales data found to export.'); return; }
+      const csv = rows.map(r => r.map(cell => { const s = (cell === null || cell === undefined) ? '' : String(cell); return `"${s.replace(/"/g,'""')}"`; }).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const name = filename || `cafe_sales_${(new Date()).toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+      const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.setAttribute('download', name); document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(link.href);
+    }
+
+    function downloadSalesXLSX(filename = null){
+      const rows = buildSalesRows();
+      if(rows.length <= 1){ alert('No sales data found to export.'); return; }
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [{wch:20},{wch:24},{wch:20},{wch:40},{wch:6},{wch:10},{wch:8},{wch:22},{wch:8}];
+      const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Sales');
+      const wbout = XLSX.write(wb, { bookType:'xlsx', type:'array' });
+      const blob = new Blob([wbout], { type:'application/octet-stream' });
+      const name = filename || `cafe_sales_${(new Date()).toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`;
+      const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.setAttribute('download', name); document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(link.href);
+    }
+  </script>
+</body>
 </html>
