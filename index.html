@@ -158,68 +158,28 @@
       color: #fff
     }
 
-    /* New dropdown style and quick buttons */
-    /* Replace existing .cust-select block with this dark-theme version */
     .cust-select {
       width: 100%;
       padding: 8px 12px;
       border-radius: 8px;
       border: none;
       background: var(--card);
-      /* dark background */
       color: #fff;
-      /* white text */
       font-size: 14px;
       -webkit-appearance: none;
-      /* remove native arrow on webkit so styling works better */
       appearance: none;
-      background-image: linear-gradient(45deg, transparent 50%, #fff 50%),
-        linear-gradient(135deg, #fff 50%, transparent 50%);
-      background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 12px) calc(1em + 2px);
-      background-size: 6px 6px, 6px 6px;
-      background-repeat: no-repeat;
       padding-right: 36px;
-      /* room for the arrow */
       border: 1px solid rgba(255, 255, 255, 0.03);
     }
 
-    /* Make the dropdown options dark too (works in modern browsers) */
     .cust-select option {
       background: var(--card);
       color: #fff;
     }
 
-    /* hide IE/Edge default arrow */
     .cust-select::-ms-expand {
       display: none;
     }
-
-    /* quick buttons (default + active look) */
-    .quick-btn {
-      padding: 8px 10px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.03);
-      color: #fff;
-      cursor: pointer;
-      transition: box-shadow .12s ease, border-color .12s ease, transform .08s ease;
-      font-weight: 700;
-    }
-
-    .quick-btn:hover {
-      transform: translateY(-2px);
-    }
-
-    .quick-btn.active {
-      border: 2px solid var(--accent);
-      /* blue border */
-      box-shadow: 0 6px 20px rgba(102, 192, 244, 0.18);
-      /* soft blue glow */
-      background: rgba(102, 192, 244, 0.06);
-      /* subtle tint */
-      color: #072033;
-    }
-
 
     .quick-list {
       display: flex;
@@ -234,6 +194,20 @@
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.03);
       cursor: pointer;
+      color: #fff;
+      font-weight: 700;
+      transition: box-shadow .12s ease, border-color .12s ease, transform .08s ease;
+    }
+
+    .quick-btn.active {
+      border: 2px solid var(--accent);
+      box-shadow: 0 6px 20px rgba(102, 192, 244, 0.18);
+      background: rgba(102, 192, 244, 0.06);
+      color: #072033;
+    }
+
+    .quick-btn:hover {
+      transform: translateY(-2px);
     }
 
     .orders {
@@ -378,9 +352,12 @@
         <!-- Quick buttons for frequent/repeated customers -->
         <div style="margin-top:8px; font-size:13px; color:var(--muted)">Quick access</div>
         <div class="quick-list">
-          <button class="quick-btn" onclick="quickCustomer('Gurjar')">Gurjar</button>
-          <button class="quick-btn" onclick="quickCustomer('Ineco')">Ineco</button>
-          <button class="quick-btn" onclick="quickCustomer('Dhawal')">Dhawal</button>
+          <button class="quick-btn" data-name="GG" onclick="quickCustomer('GG')">GG</button>
+          <button class="quick-btn" data-name="MohitG" onclick="quickCustomer('MohitG')">MohitG</button>
+          <button class="quick-btn" data-name="Digvijay" onclick="quickCustomer('Digvijay')">Digvijay</button>
+          <button class="quick-btn" data-name="Ishant" onclick="quickCustomer('Ishant')">Ishant</button>
+          <button class="quick-btn" data-name="Ineco" onclick="quickCustomer('Ineco')">Ineco</button>
+          <button class="quick-btn" data-name="Dhawal" onclick="quickCustomer('Dhawal')">Dhawal</button>
         </div>
 
         <div style="margin-top:8px;text-align:center;">
@@ -525,7 +502,6 @@
     const searchBox = document.getElementById('searchBox');
     const qtySidebar = document.getElementById('qtySidebar');
     const customerDropdown = document.getElementById('customerDropdown');
-    const customersSidebar = document.getElementById('customersSidebar');
     const ordersContainer = document.getElementById('ordersContainer');
     const activeCustomerLabel = document.getElementById('activeCustomerLabel');
     const activeCustomerIdLabel = document.getElementById('activeCustomerId');
@@ -565,18 +541,10 @@
         div.innerHTML = `<div class="name">${it.name}</div><div class="price">₹${it.price}</div>`;
 
         div.onclick = () => {
-          // visual feedback
-          div.classList.add('clicked');
-          setTimeout(() => div.classList.remove('clicked'), 150);
-
-          // read global qty (left-side)
+          div.classList.add('clicked'); setTimeout(() => div.classList.remove('clicked'), 150);
           const qty = Math.max(1, Number(qtySidebar.value || 1));
-
-          // add the item for the active customer
           addItemToActive(it, qty);
-
-          // Reset the global qty to 1 immediately after adding
-          qtySidebar.value = 1;
+          qtySidebar.value = 1; // reset after add
         };
 
         menuListEl.appendChild(div);
@@ -587,16 +555,12 @@
         menuListEl.appendChild(n);
       }
     }
-
     searchBox.addEventListener('input', () => renderMenu());
     function clearSearch() { searchBox.value = ''; renderMenu(); }
 
     /***********************
      * customers & numbering
      ***********************/
-    // ALWAYS increments the counter when creating ANY customer.
-    // If user supplies a name, we use the name but still increment the counter
-    // so numbering never repeats. First auto-created will be Customer 1.
     function createCustomer(name) {
       let counter = Number(localStorage.getItem('cafe_customer_counter_v1') || 0);
       counter = counter + 1;
@@ -610,68 +574,59 @@
       persistAndRender();
       return c;
     }
-
     function createCustomerPrompt() {
       const name = prompt('Customer name (leave blank for auto):', '');
       createCustomer(name || null);
     }
-
-    // select from dropdown
     function selectCustomerFromDropdown() {
       const v = customerDropdown.value;
       if (!v) return;
       activeCustomerId = v;
       persistAndRender();
     }
-
-    // get existing by name or create new AND increment counter
     function getOrCreateCustomerByName(name) {
       const found = customers.find(c => c.name.toLowerCase() === name.toLowerCase());
       if (found) { activeCustomerId = found.id; persistAndRender(); return found; }
-      // create new (this will increment counter)
       return createCustomer(name);
     }
-
-    // quick button handler for repeated names
     function quickCustomer(name) { getOrCreateCustomerByName(name); }
 
+    /***********************
+     * balance calculation: total items - payments + refunds
+     ***********************/
     function unpaidTotalForCustomer(c) {
-      let itemsTotal = 0; (c.items || []).forEach(it => itemsTotal += Number(it.price) * Number(it.qty));
-      let payments = 0, refunds = 0; (c.adjustments || []).forEach(a => { if (a.type === 'payment') payments += Number(a.amount || 0); else if (a.type === 'refund') refunds += Number(a.amount || 0); });
+      const itemsTotal = (c.items || []).reduce((s, it) => s + Number(it.price) * Number(it.qty), 0);
+      const payments = (c.adjustments || []).reduce((s, a) => s + (a.type === 'payment' ? Number(a.amount || 0) : 0), 0);
+      const refunds = (c.adjustments || []).reduce((s, a) => s + (a.type === 'refund' ? Number(a.amount || 0) : 0), 0);
       return Math.round((itemsTotal - payments + refunds + Number.EPSILON) * 100) / 100;
     }
 
-    function updateQuickButtons() {
-      // list of the three quick names (same order as your HTML)
-      const quickNames = ['Gurjar', 'Ineco', 'Dhawal'];
-      // find all quick buttons in DOM (assumes same order or data-name attribute)
-      const btns = document.querySelectorAll('.quick-btn');
-      btns.forEach((btn, idx) => {
-        const name = quickNames[idx];
-        // find a customer with this exact name
-        const found = customers.find(c => c.name.toLowerCase() === name.toLowerCase());
-        // active if that found customer's id matches activeCustomerId
-        if (found && found.id === activeCustomerId) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
-    }
-
-
     function renderCustomerDropdown() {
-      // refresh the select options
       customerDropdown.innerHTML = '<option value="">— Select customer —</option>';
       customers.forEach(c => {
         const opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.name + (unpaidTotalForCustomer(c) ? (' • ₹' + unpaidTotalForCustomer(c)) : '');
         customerDropdown.appendChild(opt);
       });
       if (activeCustomerId) customerDropdown.value = activeCustomerId;
+      updateQuickButtons();
+    }
+
+    function updateQuickButtons() {
+      const btns = document.querySelectorAll('.quick-btn');
+      btns.forEach(btn => {
+        const name = btn.dataset.name;
+        const found = customers.find(c => c.name.toLowerCase() === name.toLowerCase());
+        btn.classList.toggle('active', !!found && found.id === activeCustomerId);
+      });
     }
 
     /***********************
-     * renderOrders, addItem, adjustments etc.
+     * add item & item payment toggles (NEW robust logic)
+     *
+     * - When clicking an item to mark paid, we create a payment adjustment
+     *   linked to that item (linkedItemId), so payments reflect actual money.
+     * - When unpaying, we remove the linked payment adjustment.
+     *
      ***********************/
     function addItemToActive(menuItem, qtyFromPanel) {
       const qty = Math.max(1, Number(typeof qtyFromPanel !== 'undefined' ? qtyFromPanel : (qtySidebar.value || 1)));
@@ -685,9 +640,24 @@
       const it = { id: 'I-' + Date.now() + '-' + Math.floor(Math.random() * 900 + 100), name: menuItem.name, price: Number(menuItem.price), qty: qty, datetime: new Date().toISOString(), paid: false };
       cust.items.push(it); cust.uploaded = false; persistAndRender();
     }
-
     function quickAdd() { const defaultItem = MENU[0]; addItemToActive(defaultItem); }
 
+    function createPaymentForItem(cust, it) {
+      if (!cust || !it) return;
+      cust.adjustments = cust.adjustments || [];
+      const existing = cust.adjustments.find(a => a.type === 'payment' && a.linkedItemId === it.id);
+      if (existing) return; // already paid via adjustment
+      const adj = { id: genId('A'), type: 'payment', amount: Number(it.price) * Number(it.qty), note: 'item-paid', linkedItemId: it.id, datetime: new Date().toISOString() };
+      cust.adjustments.push(adj);
+    }
+    function removeItemPaymentAdjustments(cust, itemId) {
+      if (!cust || !cust.adjustments) return;
+      cust.adjustments = cust.adjustments.filter(a => !(a.type === 'payment' && a.linkedItemId === itemId));
+    }
+
+    /***********************
+     * adjustments UI for manual payments
+     ***********************/
     function openAdjustSimple(customerId) {
       const cust = customers.find(c => c.id === customerId);
       if (!cust) return alert('Customer not found');
@@ -704,6 +674,9 @@
       persistAndRender();
     }
 
+    /***********************
+     * render orders: item click toggles paid/unpaid and creates/removes per-item adjustments
+     ***********************/
     function renderOrders() {
       ordersContainer.innerHTML = '';
       if (!activeCustomerId && customers.length) activeCustomerId = customers[0].id;
@@ -711,6 +684,7 @@
         if (!Array.isArray(c.adjustments)) c.adjustments = [];
         const card = document.createElement('div'); card.className = 'order-card';
         const left = document.createElement('div'); left.style.flex = '1';
+
         const itemsTotal = c.items.reduce((s, it) => s + Number(it.price) * Number(it.qty), 0);
         const balance = unpaidTotalForCustomer(c);
 
@@ -726,8 +700,21 @@
         const itemsWrap = document.createElement('div'); itemsWrap.className = 'items';
         c.items.forEach(it => {
           const r = document.createElement('div'); r.className = 'item-row' + (it.paid ? ' paid' : '');
-          r.onclick = (e) => { it.paid = !it.paid; it.paidAt = it.paid ? new Date().toISOString() : null; persistAndRender(); e.stopPropagation(); };
+          r.onclick = (e) => {
+            e.stopPropagation();
+            // toggle logic: if marking paid -> create payment adj linked to item; if unpay -> remove that linked adj
+            if (!it.paid) {
+              it.paid = true; it.paidAt = new Date().toISOString();
+              createPaymentForItem(c, it);
+            } else {
+              it.paid = false; it.paidAt = null;
+              removeItemPaymentAdjustments(c, it.id);
+            }
+            persistAndRender();
+          };
+
           const delBtn = `<button class="btn small ghost" style="margin-left:8px;padding:6px;border-radius:6px;background:rgba(255,0,0,0.08);">Del</button>`;
+
           r.innerHTML = `<div style="display:flex;gap:8px;align-items:center;">
             <div style="font-weight:700">${it.name}${it.qty > 1 ? ` x${it.qty}` : ''}</div>
             <div class="muted" style="font-size:12px">${new Date(it.datetime).toLocaleTimeString()}</div>
@@ -736,9 +723,13 @@
             <div style="margin-right:8px">₹${Number(it.price) * Number(it.qty)}</div>
             ${delBtn}
           </div>`;
+
           itemsWrap.appendChild(r);
           const btn = r.querySelector('button');
-          btn.onclick = (e) => { e.stopPropagation(); if (!confirm('Delete this item from the order?')) return; const idx = c.items.findIndex(x => x.id === it.id); if (idx >= 0) c.items.splice(idx, 1); persistAndRender(); };
+          btn.onclick = (e) => {
+            e.stopPropagation(); if (!confirm('Delete this item from the order?')) return; const idx = c.items.findIndex(x => x.id === it.id); if (idx >= 0) c.items.splice(idx, 1); // also remove any linked payment adjustments
+            removeItemPaymentAdjustments(c, it.id); persistAndRender();
+          };
         });
 
         const adjWrap = document.createElement('div');
@@ -754,20 +745,26 @@
         }
 
         left.appendChild(itemsWrap); left.appendChild(adjWrap);
+
         const right = document.createElement('div'); right.style.display = 'flex'; right.style.flexDirection = 'column'; right.style.gap = '8px';
         const btnAdjust = document.createElement('button'); btnAdjust.className = 'btn small ghost'; btnAdjust.textContent = 'Adjust'; btnAdjust.onclick = (e) => { e.stopPropagation(); openAdjustSimple(c.id); };
 
-        const btn1 = document.createElement('button'); btn1.className = 'btn small ghost'; btn1.textContent = balance > 0 ? 'Mark All Paid' : 'Mark All Unpaid';
+        const btn1 = document.createElement('button'); btn1.className = 'btn small ghost'; btn1.textContent = c.items.some(i => !i.paid) ? 'Mark All Paid' : 'Mark All Unpaid';
         btn1.onclick = (e) => {
           e.stopPropagation();
-          if (balance > 0) {
-            c.items.forEach(i => { if (!i.paid) { i.paid = true; i.paidAt = new Date().toISOString(); } });
-            c.adjustments = c.adjustments || [];
-            c.adjustments = c.adjustments.filter(a => a.note !== 'Marked all paid (auto)');
-            c.adjustments.push({ id: genId('A'), type: 'payment', amount: balance, note: 'Marked all paid (auto)', datetime: new Date().toISOString() });
+          // toggle behavior using per-item linked adjustments
+          const unpaidItems = (c.items || []).filter(i => !i.paid);
+          if (unpaidItems.length > 0) {
+            // create payment adjustment per unpaid item and mark them paid
+            unpaidItems.forEach(i => {
+              i.paid = true; i.paidAt = new Date().toISOString();
+              createPaymentForItem(c, i);
+            });
           } else {
-            c.items.forEach(i => { i.paid = false; i.paidAt = null; });
-            c.adjustments = (c.adjustments || []).filter(a => a.note !== 'Marked all paid (auto)');
+            // unmark all: remove any linked payment adjustments for these items, set paid = false
+            const itemIds = (c.items || []).map(i => i.id);
+            c.adjustments = (c.adjustments || []).filter(a => !(a.type === 'payment' && a.linkedItemId && itemIds.includes(a.linkedItemId)));
+            (c.items || []).forEach(i => { i.paid = false; i.paidAt = null; });
           }
           persistAndRender();
         };
@@ -791,11 +788,11 @@
       } else { activeCustomerLabel.textContent = '—'; activeCustomerIdLabel.textContent = ''; dueBadge.textContent = '₹0'; }
 
       pendingSummary.textContent = `${pendingBatches.length} pending upload batch(es)`;
-      renderCustomerDropdown(); // keep dropdown in sync
+      renderCustomerDropdown();
     }
 
     /***********************
-     * upload (same as before)
+     * Upload (Cloudflare worker proxy)
      ***********************/
     const UPLOAD_ENDPOINT = 'https://cafesales.avihs.workers.dev';
     const UPLOAD_API_KEY = 'k7T4K2Jd2w';
@@ -803,7 +800,8 @@
     function persistAndRender() {
       writeJSON(KEY_ORDERS, customers);
       writeJSON(KEY_PENDING, pendingBatches);
-      renderCustomers(); renderOrders();
+      renderOrders();
+      updateQuickButtons();
     }
 
     function buildUploadBatch() {
@@ -925,56 +923,15 @@
      ***********************/
     function adjustQty(delta) { qtySidebar.value = Math.max(1, Number(qtySidebar.value || 1) + delta); }
     function openVisualizer() { window.location.href = 'salesvisual.html'; }
-    function markAllToggle() {
-      const ac = customers.find(c => c.id === activeCustomerId); if (!ac) return;
-      const itemsTotal = (ac.items || []).reduce((s, it) => s + Number(it.price) * Number(it.qty), 0);
-      const payments = (ac.adjustments || []).reduce((s, a) => s + (a.type === 'payment' ? Number(a.amount) : 0), 0);
-      const refunds = (ac.adjustments || []).reduce((s, a) => s + (a.type === 'refund' ? Number(a.amount) : 0), 0);
-      const balance = Math.round((itemsTotal - payments + refunds + Number.EPSILON) * 100) / 100;
-      if (balance > 0) {
-        ac.items.forEach(i => { if (!i.paid) { i.paid = true; i.paidAt = new Date().toISOString(); } });
-        const adj = { id: genId('A'), type: 'payment', amount: balance, note: 'Marked all paid', datetime: new Date().toISOString() };
-        if (!Array.isArray(ac.adjustments)) ac.adjustments = [];
-        ac.adjustments.push(adj);
-      } else {
-        ac.items.forEach(i => { i.paid = false; i.paidAt = null; });
-        ac.adjustments = (ac.adjustments || []).filter(a => !(a.note === 'Marked all paid'));
-      }
-      persistAndRender();
-    }
 
     /***********************
      * startup
      ***********************/
-    function renderCustomers() {
-      // we keep this simple: dropdown + quick buttons already exist
-      renderCustomerDropdown();
-      // (old scroll list removed — dropdown + quick buttons used instead)
-    }
-
-    function renderCustomerDropdown() {
-      customerDropdown.innerHTML = '<option value="">— Select customer —</option>';
-      customers.forEach(c => {
-        const opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.name + (unpaidTotalForCustomer(c) ? (' • ₹' + unpaidTotalForCustomer(c)) : '');
-        customerDropdown.appendChild(opt);
-      });
-      if (activeCustomerId) customerDropdown.value = activeCustomerId;
-    }
-    function persistAndRender() {
-      writeJSON(KEY_ORDERS, customers);
-      writeJSON(KEY_PENDING, pendingBatches);
-      renderCustomers();
-      renderOrders();
-      updateQuickButtons();   // <-- add this line
-    }
-
-
     (function init() {
-      // ensure the first created auto customer becomes "Customer 1" not Guest
       if (customers.length === 0) {
         const c = createCustomer(null); activeCustomerId = c.id;
       }
-      renderCategories(); renderMenu(); renderCustomers(); renderOrders();
+      renderCategories(); renderMenu(); renderCustomerDropdown(); renderOrders();
       document.addEventListener('keydown', (e) => { if (e.key === 'Enter') quickAdd(); });
     })();
   </script>
