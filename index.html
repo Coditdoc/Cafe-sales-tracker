@@ -397,6 +397,7 @@
             <button class="btn ghost small" onclick="uploadPending(true)">Upload Now</button>
             <button class="btn ghost small" onclick="downloadSalesCSV()">Download CSV</button>
             <button class="btn ghost small" onclick="downloadSalesXLSX()">Download Excel</button>
+            <button class="btn ghost small" onclick="closeDay()">Close Day</button>
           </div>
         </div>
 
@@ -680,118 +681,251 @@
      * render orders: item click toggles paid/unpaid and creates/removes per-item adjustments
      ***********************/
     function renderOrders() {
-      ordersContainer.innerHTML = '';
+      const container = document.getElementById('ordersContainer');
+      if (!container) return;
+
+      // Defensive: normalize state
+      if (!Array.isArray(customers)) customers = [];
+      container.innerHTML = '';
+
+      // Ensure we have an active customer id
       if (!activeCustomerId && customers.length) activeCustomerId = customers[0].id;
-      customers.forEach(c => {
-        if (!Array.isArray(c.adjustments)) c.adjustments = [];
-        const card = document.createElement('div'); card.className = 'order-card';
-        const left = document.createElement('div'); left.style.flex = '1';
+
+      // Sort so the active customer renders first (render-only; does not mutate storage)
+      const list = [...customers].sort((a, b) => {
+        if (a.id === activeCustomerId) return -1;
+        if (b.id === activeCustomerId) return 1;
+        return 0;
+      });
+
+      // Empty state
+      if (list.length === 0) {
+        container.innerHTML =
+          '<div class="muted" style="padding:10px">No customers yet. Use “+ New Customer”.</div>';
+      }
+
+      list.forEach((c) => {
+        // Defensive: normalize per-customer arrays
+        c.items = Array.isArray(c.items) ? c.items : [];
+        c.adjustments = Array.isArray(c.adjustments) ? c.adjustments : [];
+
+        const card = document.createElement('div');
+        card.className = 'order-card';
+        card.dataset.cust = c.id;
+
+        const left = document.createElement('div');
+        left.style.flex = '1';
 
         const itemsTotal = c.items.reduce((s, it) => s + Number(it.price) * Number(it.qty), 0);
         const balance = unpaidTotalForCustomer(c);
 
-        left.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
-        <div><strong>${c.name}</strong><div class="order-meta">ID:${c.id} • ${new Date(c.createdAt).toLocaleTimeString()}</div></div>
+        left.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>${c.name}</strong>
+          <div class="order-meta">ID:${c.id} • ${new Date(c.createdAt).toLocaleTimeString()}</div>
+        </div>
         <div style="text-align:right">
           <div class="muted">Total</div>
           <div><strong>₹${itemsTotal}</strong></div>
-          <div style="margin-top:6px" id="badge-${c.id}">${balance > 0 ? `<span class="badge-due">Due ₹${balance}</span>` : (balance < 0 ? `<span style="background:var(--ok);padding:6px 10px;border-radius:8px;font-weight:700;color:#072033">We owe ₹${Math.abs(balance)}</span>` : `<span class="muted">Paid</span>`)}</div>
+          <div style="margin-top:6px">
+            ${balance > 0
+            ? `<span class="badge-due">Due ₹${balance}</span>`
+            : balance < 0
+              ? `<span style="background:var(--ok);padding:6px 10px;border-radius:8px;font-weight:700;color:#072033">We owe ₹${Math.abs(
+                balance
+              )}</span>`
+              : `<span class="muted">Paid</span>`
+          }
+          </div>
         </div>
       </div>`;
 
-        const itemsWrap = document.createElement('div'); itemsWrap.className = 'items';
-        c.items.forEach(it => {
-          const r = document.createElement('div'); r.className = 'item-row' + (it.paid ? ' paid' : '');
-          r.onclick = (e) => {
-            e.stopPropagation();
-            // toggle logic: if marking paid -> create payment adj linked to item; if unpay -> remove that linked adj
-            if (!it.paid) {
-              it.paid = true; it.paidAt = new Date().toISOString();
-              createPaymentForItem(c, it);
-            } else {
-              it.paid = false; it.paidAt = null;
-              removeItemPaymentAdjustments(c, it.id);
-            }
-            persistAndRender();
-          };
+        // Items list
+        const itemsWrap = document.createElement('div');
+        itemsWrap.className = 'items';
 
-          const delBtn = `<button class="btn small ghost" style="margin-left:8px;padding:6px;border-radius:6px;background:rgba(255,0,0,0.08);">Del</button>`;
+        if (c.items.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'muted';
+          empty.style.padding = '6px 8px';
+          empty.textContent = 'No items yet';
+          itemsWrap.appendChild(empty);
+        } else {
+          c.items.forEach((it) => {
+            const row = document.createElement('div');
+            row.className = 'item-row' + (it.paid ? ' paid' : '');
+            row.onclick = (e) => {
+              e.stopPropagation();
+              if (!it.paid) {
+                it.paid = true;
+                it.paidAt = new Date().toISOString();
+                createPaymentForItem(c, it);
+              } else {
+                it.paid = false;
+                it.paidAt = null;
+                removeItemPaymentAdjustments(c, it.id);
+              }
+              persistAndRender();
+            };
 
-          r.innerHTML = `<div style="display:flex;gap:8px;align-items:center;">
+            row.innerHTML = `
+          <div style="display:flex;gap:8px;align-items:center">
             <div style="font-weight:700">${it.name}${it.qty > 1 ? ` x${it.qty}` : ''}</div>
             <div class="muted" style="font-size:12px">${new Date(it.datetime).toLocaleTimeString()}</div>
           </div>
           <div style="min-width:110px;text-align:right;display:flex;align-items:center;justify-content:flex-end">
             <div style="margin-right:8px">₹${Number(it.price) * Number(it.qty)}</div>
-            ${delBtn}
+            <button class="btn small ghost" style="padding:6px;border-radius:6px;background:rgba(255,0,0,0.08)">Del</button>
           </div>`;
 
-          itemsWrap.appendChild(r);
-          const btn = r.querySelector('button');
-          btn.onclick = (e) => {
-            e.stopPropagation(); if (!confirm('Delete this item from the order?')) return; const idx = c.items.findIndex(x => x.id === it.id); if (idx >= 0) c.items.splice(idx, 1); // also remove any linked payment adjustments
-            removeItemPaymentAdjustments(c, it.id); persistAndRender();
-          };
-        });
+            // Delete item
+            row.querySelector('button').onclick = (e) => {
+              e.stopPropagation();
+              if (!confirm('Delete this item?')) return;
+              const idx = c.items.findIndex((x) => x.id === it.id);
+              if (idx >= 0) c.items.splice(idx, 1);
+              removeItemPaymentAdjustments(c, it.id);
+              persistAndRender();
+            };
 
-        const adjWrap = document.createElement('div');
-        if ((c.adjustments || []).length) {
-          (c.adjustments || []).forEach(a => {
-            const arow = document.createElement('div'); arow.style.display = 'flex'; arow.style.justifyContent = 'space-between'; arow.style.padding = '6px 8px'; arow.style.borderRadius = '8px'; arow.style.background = 'rgba(255,255,255,0.02)'; arow.style.fontSize = '13px';
-            const label = a.type === 'payment' ? `Received: ₹${a.amount}` : `Change/refund: ₹${a.amount}`;
-            arow.innerHTML = `<div style="font-weight:600">${label} ${a.note ? '— ' + a.note : ''}</div>
-            <div style="min-width:60px;text-align:right"><small class="muted">${new Date(a.datetime).toLocaleTimeString()}</small> <button style="margin-left:8px" class="btn small ghost">Del</button></div>`;
-            arow.querySelector('button').onclick = (e) => { e.stopPropagation(); if (confirm('Delete adjustment?')) { c.adjustments = (c.adjustments || []).filter(x => x.id !== a.id); persistAndRender(); } };
-            adjWrap.appendChild(arow);
+            itemsWrap.appendChild(row);
           });
         }
 
-        left.appendChild(itemsWrap); left.appendChild(adjWrap);
+        // Adjustments list
+        const adjWrap = document.createElement('div');
+        (c.adjustments || []).forEach((a) => {
+          const arow = document.createElement('div');
+          arow.style.cssText =
+            'display:flex;justify-content:space-between;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02);font-size:13px';
+          const label = a.type === 'payment' ? `Received: ₹${a.amount}` : `Change/refund: ₹${a.amount}`;
+          arow.innerHTML = `
+        <div style="font-weight:600">${label} ${a.note ? '— ' + a.note : ''}</div>
+        <div style="min-width:60px;text-align:right">
+          <small class="muted">${new Date(a.datetime).toLocaleTimeString()}</small>
+          <button class="btn small ghost" style="margin-left:8px">Del</button>
+        </div>`;
+          arow.querySelector('button').onclick = (e) => {
+            e.stopPropagation();
+            if (confirm('Delete adjustment?')) {
+              c.adjustments = (c.adjustments || []).filter((x) => x.id !== a.id);
+              persistAndRender();
+            }
+          };
+          adjWrap.appendChild(arow);
+        });
 
-        const right = document.createElement('div'); right.style.display = 'flex'; right.style.flexDirection = 'column'; right.style.gap = '8px';
-        const btnAdjust = document.createElement('button'); btnAdjust.className = 'btn small ghost'; btnAdjust.textContent = 'Adjust'; btnAdjust.onclick = (e) => { e.stopPropagation(); openAdjustSimple(c.id); };
+        left.appendChild(itemsWrap);
+        left.appendChild(adjWrap);
 
-        const btn1 = document.createElement('button'); btn1.className = 'btn small ghost'; btn1.textContent = c.items.some(i => !i.paid) ? 'Mark All Paid' : 'Mark All Unpaid';
-        btn1.onclick = (e) => {
+        // Right actions (carry/adjust/mark/delete)
+        const right = document.createElement('div');
+        right.style.display = 'flex';
+        right.style.flexDirection = 'column';
+        right.style.gap = '8px';
+
+        const carryBtn = document.createElement('button');
+        carryBtn.className = 'btn small ghost';
+        carryBtn.textContent = c.carryOver ? 'Carry: ON' : 'Carry: OFF';
+        carryBtn.style.border = c.carryOver
+          ? '2px solid var(--accent)'
+          : '1px solid rgba(255,255,255,0.03)';
+        carryBtn.onclick = (e) => {
           e.stopPropagation();
-          // toggle behavior using per-item linked adjustments
-          const unpaidItems = (c.items || []).filter(i => !i.paid);
-          if (unpaidItems.length > 0) {
-            // create payment adjustment per unpaid item and mark them paid
-            unpaidItems.forEach(i => {
-              i.paid = true; i.paidAt = new Date().toISOString();
+          c.carryOver = !c.carryOver;
+          persistAndRender();
+        };
+
+        const btnAdjust = document.createElement('button');
+        btnAdjust.className = 'btn small ghost';
+        btnAdjust.textContent = 'Adjust';
+        btnAdjust.onclick = (e) => {
+          e.stopPropagation();
+          openAdjustSimple(c.id);
+        };
+
+        const btnMark = document.createElement('button');
+        btnMark.className = 'btn small ghost';
+        btnMark.textContent = c.items.some((i) => !i.paid) ? 'Mark All Paid' : 'Mark All Unpaid';
+        btnMark.onclick = (e) => {
+          e.stopPropagation();
+          const unpaid = (c.items || []).filter((i) => !i.paid);
+          if (unpaid.length > 0) {
+            unpaid.forEach((i) => {
+              i.paid = true;
+              i.paidAt = new Date().toISOString();
               createPaymentForItem(c, i);
             });
           } else {
-            // unmark all: remove any linked payment adjustments for these items, set paid = false
-            const itemIds = (c.items || []).map(i => i.id);
-            c.adjustments = (c.adjustments || []).filter(a => !(a.type === 'payment' && a.linkedItemId && itemIds.includes(a.linkedItemId)));
-            (c.items || []).forEach(i => { i.paid = false; i.paidAt = null; });
+            const ids = (c.items || []).map((i) => i.id);
+            c.adjustments = (c.adjustments || []).filter(
+              (a) => !(a.type === 'payment' && a.linkedItemId && ids.includes(a.linkedItemId))
+            );
+            (c.items || []).forEach((i) => {
+              i.paid = false;
+              i.paidAt = null;
+            });
           }
           persistAndRender();
         };
 
-        const btn2 = document.createElement('button'); btn2.className = 'btn small'; btn2.textContent = 'Delete'; btn2.style.background = 'rgba(255,0,0,0.12)';
-        btn2.onclick = (e) => { e.stopPropagation(); if (confirm('Delete customer and items?')) { customers = customers.filter(x => x.id !== c.id); if (activeCustomerId === c.id) activeCustomerId = customers.length ? customers[0].id : null; persistAndRender(); } };
+        const btnDelete = document.createElement('button');
+        btnDelete.className = 'btn small';
+        btnDelete.textContent = 'Delete';
+        btnDelete.style.background = 'rgba(255,0,0,0.12)';
+        btnDelete.onclick = (e) => {
+          e.stopPropagation();
+          if (confirm('Delete customer and all items?')) {
+            customers = customers.filter((x) => x.id !== c.id);
+            if (activeCustomerId === c.id) {
+              activeCustomerId = customers.length ? customers[0].id : null;
+            }
+            persistAndRender();
+          }
+        };
 
-        right.appendChild(btnAdjust); right.appendChild(btn1); right.appendChild(btn2);
-        card.appendChild(left); card.appendChild(right);
-        ordersContainer.appendChild(card);
+        right.appendChild(carryBtn);
+        right.appendChild(btnAdjust);
+        right.appendChild(btnMark);
+        right.appendChild(btnDelete);
+        card.appendChild(left);
+        card.appendChild(right);
+        container.appendChild(card);
       });
 
-      const ac = customers.find(c => c.id === activeCustomerId);
+      // Active footer summary
+      const ac = customers.find((c) => c.id === activeCustomerId);
       if (ac) {
         const bal = unpaidTotalForCustomer(ac);
         activeCustomerLabel.textContent = ac.name;
         activeCustomerIdLabel.textContent = ac.id;
-        if (bal > 0) { dueBadge.style.background = 'var(--danger)'; dueBadge.textContent = '₹' + bal; }
-        else if (bal < 0) { dueBadge.style.background = 'var(--ok)'; dueBadge.textContent = '₹' + Math.abs(bal); }
-        else { dueBadge.style.background = 'var(--muted)'; dueBadge.textContent = '₹0'; }
-      } else { activeCustomerLabel.textContent = '—'; activeCustomerIdLabel.textContent = ''; dueBadge.textContent = '₹0'; }
+        if (bal > 0) {
+          dueBadge.style.background = 'var(--danger)';
+          dueBadge.textContent = '₹' + bal;
+        } else if (bal < 0) {
+          dueBadge.style.background = 'var(--ok)';
+          dueBadge.textContent = '₹' + Math.abs(bal);
+        } else {
+          dueBadge.style.background = 'var(--muted)';
+          dueBadge.textContent = '₹0';
+        }
+      } else {
+        activeCustomerLabel.textContent = '—';
+        activeCustomerIdLabel.textContent = '';
+        dueBadge.textContent = '₹0';
+      }
 
       pendingSummary.textContent = `${pendingBatches.length} pending upload batch(es)`;
+
+      // Auto-scroll active card into view
+      const activeCard = container.querySelector(`[data-cust="${activeCustomerId}"]`);
+      if (activeCard) activeCard.scrollIntoView({ behavior: 'instant', block: 'start' });
+
+      // Keep dropdown & quick buttons synced
       renderCustomerDropdown();
     }
+
 
     /***********************
      * Upload (Cloudflare worker proxy)
@@ -807,7 +941,10 @@
     }
 
     function buildUploadBatch() {
-      const toUpload = customers.filter(c => (c.items && c.items.length > 0) || (c.adjustments && c.adjustments.length > 0) && !c.uploaded);
+      const toUpload = customers.filter(
+        c => ((c.items && c.items.length > 0) || (c.adjustments && c.adjustments.length > 0)) && !c.uploaded
+      );
+
       if (toUpload.length === 0) return null;
       const entries = [];
       toUpload.forEach(c => {
@@ -919,6 +1056,39 @@
       const name = filename || `cafe_sales_${(new Date()).toISOString().slice(0, 19).replace(/[:T]/g, '-')}.xlsx`;
       const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.setAttribute('download', name); document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(link.href);
     }
+
+    /***********************
+     * close day
+     ***********************/
+    function closeDay() {
+      if (!confirm('Close Day?\n• Customers with ₹0 due and Carry OFF will be cleared.\n• Customers with any due or Carry ON will remain.\n\nProceed?')) return;
+
+      const kept = [];
+      const removed = [];
+
+      customers.forEach(c => {
+        const due = unpaidTotalForCustomer(c);
+        const carry = !!c.carryOver;
+
+        // Keep if they have due OR carry is ON
+        if (due > 0 || carry) {
+          kept.push(c);
+        } else {
+          removed.push(c);
+        }
+      });
+
+      customers = kept;
+
+      // Optional: reset the active customer if it was removed
+      if (activeCustomerId && removed.some(rc => rc.id === activeCustomerId)) {
+        activeCustomerId = customers.length ? customers[0].id : null;
+      }
+
+      persistAndRender();
+      alert(`Day closed.\nKept: ${kept.length}\nCleared: ${removed.length}`);
+    }
+
 
     /***********************
      * misc helpers
